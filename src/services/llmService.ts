@@ -14,39 +14,52 @@ export async function generateExplanation(riskData: any): Promise<LlmExplanation
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
-    As a clinical pharmacogenomics expert, explain the following risk assessment to a healthcare provider.
-    
-    Drug: ${riskData.drug}
-    Gene: ${riskData.gene}
-    Diplotype: ${riskData.diplotype}
-    Phenotype: ${riskData.phenotype}
-    Risk Label: ${riskData.risk_label}
-    Recommendation: ${riskData.recommendation}
-    
-    Detected Variants: ${JSON.stringify(riskData.detected_variants)}
-    
-    Provide a structured response in plain text with two sections:
-    1. Summary: A concise explanation of the risk.
-    2. Mechanism: The biological/pharmacokinetic mechanism explaining how this genotype affects drug response.
-    
-    The response must be professional, clinically accurate, and mention the specific gene and variants.
-  `;
+You are a clinical pharmacogenomics expert.
+
+Explain the following risk assessment for a healthcare provider.
+
+Drug: ${riskData.drug}
+Gene: ${riskData.gene}
+Diplotype: ${riskData.diplotype}
+Phenotype: ${riskData.phenotype}
+Risk Label: ${riskData.risk_label}
+Recommendation: ${riskData.recommendation}
+Detected Variants: ${JSON.stringify(riskData.detected_variants)}
+
+Return ONLY valid JSON in this exact format:
+
+{
+  "summary": "Concise clinical explanation of the risk.",
+  "mechanism": "Biological and pharmacokinetic explanation including gene and specific variants."
+}
+
+Do not include markdown, headings, or extra commentary.
+`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    });
+
     const response = await result.response;
     const text = response.text();
 
-    // Crude parsing of LLM response into sections
-    const summaryMatch = text.match(/Summary:([\s\S]*?)(?=Mechanism:|$)/i);
-    const mechanismMatch = text.match(/Mechanism:([\s\S]*?)$/i);
+    const parsed = JSON.parse(text);
+
+    if (!parsed.summary || !parsed.mechanism) {
+      throw new Error("Invalid LLM response structure");
+    }
 
     return {
-      summary: summaryMatch?.[1]?.trim() || generateFallbackSummary(riskData),
-      mechanism: mechanismMatch?.[1]?.trim() || generateFallbackMechanism(riskData)
+      summary: parsed.summary.trim(),
+      mechanism: parsed.mechanism.trim()
     };
   } catch (error) {
-    console.error("LLM Generation Error:", error);
+    console.warn("LLM generation failed, using fallback.");
+
     return {
       summary: generateFallbackSummary(riskData),
       mechanism: generateFallbackMechanism(riskData)
@@ -56,15 +69,20 @@ export async function generateExplanation(riskData: any): Promise<LlmExplanation
 
 function generateFallbackSummary(riskData: any): string {
   if (riskData.risk_label === "Safe") {
-    return `Patient is a ${riskData.phenotype} for ${riskData.gene}. Standard dosing of ${riskData.drug} is likely safe.`;
+    return `Patient is a ${riskData.phenotype} for ${riskData.gene}. Standard dosing of ${riskData.drug} is likely appropriate.`;
   }
+
   if (riskData.risk_label === "Toxic" || riskData.risk_label === "Ineffective") {
-    return `Critical risk detected for ${riskData.drug} due to ${riskData.gene} ${riskData.phenotype} status. ${riskData.recommendation}`;
+    return `Elevated clinical risk identified for ${riskData.drug} due to ${riskData.gene} ${riskData.phenotype} status. ${riskData.recommendation}`;
   }
-  return `Adjustments may be needed for ${riskData.drug} based on ${riskData.gene} ${riskData.phenotype} phenotype.`;
+
+  return `Dose adjustment or monitoring may be required for ${riskData.drug} based on ${riskData.gene} ${riskData.phenotype} phenotype.`;
 }
 
 function generateFallbackMechanism(riskData: any): string {
-  const variants = riskData.detected_variants.map((v: any) => v.star).join(", ");
-  return `The ${riskData.gene} gene (variants: ${variants}) modifies the metabolic rate or transporter activity for ${riskData.drug}, leading to altered plasma levels or drug response as identified in CPIC guidelines.`;
+  const variants = Array.isArray(riskData.detected_variants)
+    ? riskData.detected_variants.map((v: any) => v.star).join(", ")
+    : "unspecified variants";
+
+  return `The ${riskData.gene} gene (variants: ${variants}) influences metabolism or transporter activity affecting ${riskData.drug} pharmacokinetics, potentially altering drug exposure and response as described in CPIC guidance.`;
 }

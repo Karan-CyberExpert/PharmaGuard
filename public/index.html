@@ -1,417 +1,895 @@
-<!doctype html>
-<html>
-  <head>
-    <title>PharmaGuard</title>
-    <style>
-      body {
-        font-family: Arial;
-        margin: 0;
-        background: #f4f6f9;
-      }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmaGuard · AI Pharmacogenomics</title>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    }
 
-      header {
-        background: #1f3c88;
-        color: white;
-        text-align: center;
-        padding: 20px;
-      }
+    body {
+      background: linear-gradient(145deg, #eef2f7 0%, #f8fafd 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1.5rem 1rem;
+    }
 
-      .container {
-        width: 90%;
-        max-width: 900px;
-        margin: 30px auto;
-      }
+    .app-card {
+      max-width: 1200px;
+      width: 100%;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 2.5rem;
+      padding: 2rem 2rem 2.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0,32,64,0.25), 0 0 0 1px rgba(156,180,215,0.3);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
 
-      .card {
-        background: white;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      }
+    .pharma-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .pharma-header h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #10316b, #2b4a9f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .pharma-header i {
+      font-size: 3.2rem;
+      color: #1f3c88;
+      filter: drop-shadow(0 6px 8px rgba(20,60,140,0.2));
+    }
+    .sub {
+      color: #2c405e;
+      font-weight: 400;
+      margin-left: auto;
+      background: rgba(31,60,136,0.08);
+      padding: 0.4rem 1.2rem;
+      border-radius: 60px;
+      font-size: 0.95rem;
+      border: 1px solid rgba(31,60,136,0.2);
+    }
 
-      input {
-        width: 100%;
-        padding: 10px;
-        margin: 10px 0;
-      }
+    .card-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
 
-      button {
-        padding: 10px;
-        background: #1f3c88;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-      }
+    .glass-card {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.6rem 2rem;
+      box-shadow: 0 8px 24px rgba(0,30,60,0.05);
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255,255,255,0.7);
+    }
 
-      button:hover {
-        background: #162d63;
-      }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .card-title i {
+      font-size: 2rem;
+      color: #1f3c88;
+      background: #e6edff;
+      padding: 10px;
+      border-radius: 18px;
+    }
+    .card-title h2 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #152b52;
+    }
+    .card-title span {
+      font-size: 0.9rem;
+      background: #edf3ff;
+      padding: 4px 14px;
+      border-radius: 30px;
+      color: #1f3c88;
+    }
 
-      .error {
-        color: red;
-        font-weight: bold;
-      }
+    .file-zone {
+      background: #f3f7fd;
+      border-radius: 24px;
+      padding: 1.5rem 1.8rem;
+      border: 2px dashed #a0bbdf;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .file-zone:hover {
+      background: #e9f0fc;
+    }
+    .file-zone i {
+      font-size: 3rem;
+      color: #1f3c88;
+      margin-bottom: 0.5rem;
+    }
+    .file-zone input {
+      margin-top: 0.8rem;
+      border: none;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      width: 100%;
+      max-width: 340px;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
 
-      .safe {
-        background: green;
-      }
-      .adjust {
-        background: orange;
-      }
-      .toxic {
-        background: red;
-      }
-      .ineffective {
-        background: darkred;
-      }
-      .unknown {
-        background: gray;
-      }
+    .status-badge {
+      margin-top: 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .valid {
+      color: #0f6e3f;
+      background: #e2ffe9;
+      padding: 6px 18px;
+      border-radius: 40px;
+    }
+    .error-text {
+      color: #b02b3a;
+      background: #ffe6e9;
+      padding: 8px 16px;
+      border-radius: 40px;
+      display: inline-block;
+    }
 
-      .risk-badge {
-        padding: 10px;
-        margin: 5px 0;
-        color: white;
-        border-radius: 5px;
-        font-weight: bold;
-      }
+    .drug-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    .drug-input-wrapper {
+      flex: 2 1 280px;
+      position: relative;
+    }
+    .drug-input-wrapper i {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b85b2;
+      font-size: 1.1rem;
+    }
+    .drug-input-wrapper input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      border: 2px solid #dbe2ef;
+      border-radius: 50px;
+      font-size: 1rem;
+      background: white;
+      transition: 0.15s;
+    }
+    .drug-input-wrapper input:focus {
+      border-color: #1f3c88;
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(31,60,136,0.15);
+    }
+    .btn-primary {
+      background: #1f3c88;
+      border: none;
+      padding: 1rem 2.2rem;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+      box-shadow: 0 8px 16px -6px #1f3c8860;
+      border: 1px solid #ffffff40;
+    }
+    .btn-primary i {
+      font-size: 1.2rem;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #0e2a63;
+      transform: scale(1.01);
+      box-shadow: 0 12px 20px -8px #102559;
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
 
-      pre {
-        background: black;
-        color: #00ff88;
-        padding: 15px;
-        overflow-x: auto;
-      }
+    .loading-overlay {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 20px 0 10px;
+      padding: 18px;
+      background: #ffffffec;
+      border-radius: 80px;
+      border: 1px solid #bbcbe8;
+    }
+    .loading-overlay.show {
+      display: flex;
+    }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 4px solid #d0dcf5;
+      border-top: 4px solid #1f3c88;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-      .hidden {
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>🧬 PharmaGuard</h1>
-      <p>AI Pharmacogenomic Risk Assessment</p>
-    </header>
+    /* Risk badges */
+    .risk-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1.8rem 0 1.5rem;
+    }
+    .risk-badge {
+      padding: 1rem 1.8rem;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .risk-badge i {
+      font-size: 1.6rem;
+    }
+    .safe { background: #1e7b4b; }
+    .adjust { background: #c16f1d; }
+    .toxic { background: #b13e3e; }
+    .ineffective { background: #7a3e7a; }
+    .unknown { background: #5b677b; }
 
-    <div class="container">
-      <!-- VCF Upload -->
-      <div class="card">
-        <h2>Upload VCF File</h2>
-        <p>
-          Requirements: • .vcf format (VCFv4.2)
-          <br />
-          • Max size 5MB
-        </p>
+    /* Tabs for formatted/raw response */
+    .tab-container {
+      margin: 1.5rem 0 1rem;
+    }
+    .tab-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .tab-btn {
+      padding: 0.8rem 1.8rem;
+      border: none;
+      background: #eef3fc;
+      border-radius: 40px;
+      font-weight: 600;
+      color: #1f3c88;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.15s;
+    }
+    .tab-btn.active {
+      background: #1f3c88;
+      color: white;
+    }
+    .tab-btn i {
+      font-size: 1.1rem;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
 
-        <input type="file" id="vcfFile" accept=".vcf" />
-        <div id="fileStatus"></div>
-        <div id="vcfError" class="error"></div>
+    /* Formatted drug cards */
+    .drug-result-card {
+      background: #f8fafd;
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-left: 6px solid;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .drug-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+    }
+    .drug-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #152b52;
+      text-transform: capitalize;
+    }
+    .severity-badge {
+      padding: 0.3rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: white;
+    }
+    .severity-critical { background: #b13e3e; }
+    .severity-high { background: #c16f1d; }
+    .severity-moderate { background: #d89c3b; }
+    .severity-low { background: #1e7b4b; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.2rem;
+      margin: 1.2rem 0;
+    }
+    .info-item {
+      background: white;
+      padding: 1rem;
+      border-radius: 1rem;
+    }
+    .info-label {
+      font-size: 0.85rem;
+      color: #5f6f8a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.3rem;
+    }
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #152b52;
+    }
+
+    .explanation-box {
+      background: white;
+      padding: 1.2rem;
+      border-radius: 1rem;
+      margin: 1rem 0;
+      border-left: 4px solid #1f3c88;
+    }
+    .variants-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .variant-tag {
+      background: #e6edff;
+      padding: 0.3rem 1rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-family: monospace;
+    }
+
+    .json-box {
+      background: #0f1a2c;
+      border-radius: 24px;
+      padding: 1.6rem;
+      margin: 1rem 0;
+      border: 1px solid #31486a;
+      max-height: 500px;
+      overflow: auto;
+    }
+    pre {
+      color: #c0e0ff;
+      background: transparent;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .btn-secondary {
+      background: white;
+      border: 2px solid #1f3c88;
+      color: #1f3c88;
+      padding: 0.9rem 2rem;
+      border-radius: 60px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-secondary:hover {
+      background: #e3ecff;
+    }
+    .btn-secondary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .hidden { display: none !important; }
+
+    footer {
+      margin-top: 2rem;
+      color: #5f6f8a;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .app-card { padding: 1.5rem; }
+      .pharma-header h1 { font-size: 2rem; }
+      .glass-card { padding: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-card">
+  <div class="pharma-header">
+    <i class="fas fa-dna"></i>
+    <h1>PharmaGuard</h1>
+    <div class="sub"><i class="fa-regular fa-flask"></i> Real API · PGx</div>
+  </div>
+
+  <div class="card-grid">
+    <!-- UPLOAD CARD -->
+    <div class="glass-card">
+      <div class="card-title">
+        <i class="fas fa-file-arrow-up"></i>
+        <h2>Upload VCF</h2>
+        <span>VCFv4.2 · ≤5MB</span>
       </div>
-
-      <!-- Drug Input -->
-      <div class="card">
-        <h2>Enter Drug(s)</h2>
-        <p>Supported: CODEINE, WARFARIN, CLOPIDOGREL, SIMVASTATIN, AZATHIOPRINE, FLUOROURACIL</p>
-
-        <input type="text" id="drugInput" placeholder="Example: CODEINE, WARFARIN" />
-
-        <button onclick="analyzeData()">Analyze</button>
-        <div id="drugError" class="error"></div>
-      </div>
-
-      <!-- Results -->
-      <div class="card hidden" id="resultsSection">
-        <h2>Risk Assessment</h2>
-        <div id="riskContainer"></div>
-
-        <h3>Structured JSON Output</h3>
-        <pre id="jsonOutput"></pre>
-
-        <button onclick="downloadJSON()">Download JSON</button>
-        <button onclick="copyJSON()">Copy JSON</button>
+      <div class="file-zone">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <input type="file" id="vcfFile" accept=".vcf">
+        <div id="fileStatus" class="status-badge"></div>
+        <div id="vcfError" class="error-text" style="margin-top: 10px;"></div>
       </div>
     </div>
 
-    <script>
-      let parsedVariants = [];
-      let finalResults = [];
-      let vcfValidationPassed = false;
+    <!-- DRUG INPUT CARD -->
+    <div class="glass-card">
+      <div class="card-title">
+        <i class="fas fa-capsules"></i>
+        <h2>Drug(s)</h2>
+        <span>Enter drug names</span>
+      </div>
+      <div class="drug-row">
+        <div class="drug-input-wrapper">
+          <i class="fas fa-prescription"></i>
+          <input type="text" id="drugInput" placeholder="e.g., CODEINE, WARFARIN, CLOPIDOGREL" value="CODEINE, WARFARIN">
+        </div>
+        <button class="btn-primary" onclick="analyzeData()" id="analyzeBtn">
+          <i class="fas fa-microscope"></i> Analyze
+        </button>
+      </div>
+      <div id="drugError" class="error-text" style="margin-top: 16px;"></div>
 
-      const SUPPORTED_DRUGS = [
-        'CODEINE',
-        'WARFARIN',
-        'CLOPIDOGREL',
-        'SIMVASTATIN',
-        'AZATHIOPRINE',
-        'FLUOROURACIL',
-      ];
+      <!-- loading indicator -->
+      <div id="loadingIndicator" class="loading-overlay">
+        <div class="spinner"></div>
+        <span style="font-weight: 500; color:#1f3c88;">Calling API · analyzing variants</span>
+        <i class="fas fa-cloud" style="color:#1f3c88;"></i>
+      </div>
+    </div>
 
-      const TARGET_GENES = ['CYP2D6', 'CYP2C19', 'CYP2C9', 'SLCO1B1', 'TPMT', 'DPYD'];
+    <!-- RESULTS SECTION -->
+    <div id="resultsSection" class="glass-card hidden">
+      <div class="card-title">
+        <i class="fas fa-clipboard-check"></i>
+        <h2>Results</h2>
+        <span><i class="fa-regular fa-clock"></i> live API</span>
+      </div>
+      
+      <!-- API Response Time / Status -->
+      <div id="apiMeta" style="margin-bottom: 1rem; font-size: 0.95rem; color: #2c405e;">
+        <i class="fas fa-circle-nodes"></i> <span id="apiStatus">Response received</span>
+      </div>
 
-      // =================== VCF VALIDATION ===================
+      <!-- Tab Navigation -->
+      <div class="tab-container">
+        <div class="tab-buttons">
+          <button class="tab-btn active" onclick="switchTab('formatted')" id="tabFormattedBtn">
+            <i class="fas fa-table"></i> Formatted View
+          </button>
+          <button class="tab-btn" onclick="switchTab('raw')" id="tabRawBtn">
+            <i class="fas fa-code"></i> Raw API Response
+          </button>
+        </div>
 
-      document.getElementById('vcfFile').addEventListener('change', function (event) {
-        const file = event.target.files[0];
-        const errorDiv = document.getElementById('vcfError');
-        const statusDiv = document.getElementById('fileStatus');
+        <!-- Formatted View Tab -->
+        <div id="formattedTab" class="tab-content active">
+          <div id="riskContainer" class="risk-container"></div>
+          <div id="formattedResults"></div>
+        </div>
 
-        errorDiv.innerText = '';
-        statusDiv.innerText = '';
-        parsedVariants = [];
-        vcfValidationPassed = false;
+        <!-- Raw JSON Tab -->
+        <div id="rawTab" class="tab-content">
+          <div class="json-box">
+            <pre id="jsonOutput">—</pre>
+          </div>
+        </div>
+      </div>
 
-        if (!file) return;
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="btn-secondary" onclick="downloadJSON()" id="downloadBtn">
+          <i class="fas fa-download"></i> Download JSON
+        </button>
+        <button class="btn-secondary" onclick="copyJSON()" id="copyBtn">
+          <i class="fas fa-copy"></i> Copy JSON
+        </button>
+        <button class="btn-secondary" onclick="copyFormattedSummary()" id="copySummaryBtn">
+          <i class="fas fa-clipboard"></i> Copy Summary
+        </button>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <i class="fa-regular fa-hospital"></i> PharmaGuard · Real API integration · Response format v1.0
+  </footer>
+</div>
 
-        if (!file.name.endsWith('.vcf')) {
-          errorDiv.innerText = 'Invalid file type.';
+<script>
+  (function() {
+    // State
+    let parsedVariants = [];
+    let finalResults = [];
+    let vcfValidationPassed = false;
+    let currentFile = null;
+
+    // DOM elements
+    const vcfInput = document.getElementById('vcfFile');
+    const vcfError = document.getElementById('vcfError');
+    const fileStatus = document.getElementById('fileStatus');
+    const drugError = document.getElementById('drugError');
+    const resultsSection = document.getElementById('resultsSection');
+    const riskContainer = document.getElementById('riskContainer');
+    const formattedResults = document.getElementById('formattedResults');
+    const jsonOut = document.getElementById('jsonOutput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const apiStatus = document.getElementById('apiStatus');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const copySummaryBtn = document.getElementById('copySummaryBtn');
+
+    // Target genes for local validation
+    const TARGET_GENES = ['CYP2D6', 'CYP2C19', 'CYP2C9', 'SLCO1B1', 'TPMT', 'DPYD'];
+
+    // Tab switching
+    window.switchTab = function(tab) {
+      document.getElementById('formattedTab').classList.remove('active');
+      document.getElementById('rawTab').classList.remove('active');
+      document.getElementById('tabFormattedBtn').classList.remove('active');
+      document.getElementById('tabRawBtn').classList.remove('active');
+      
+      if (tab === 'formatted') {
+        document.getElementById('formattedTab').classList.add('active');
+        document.getElementById('tabFormattedBtn').classList.add('active');
+      } else {
+        document.getElementById('rawTab').classList.add('active');
+        document.getElementById('tabRawBtn').classList.add('active');
+      }
+    };
+
+    // VCF validation
+    vcfInput.addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      vcfError.innerText = '';
+      fileStatus.innerHTML = '';
+      parsedVariants = [];
+      vcfValidationPassed = false;
+      currentFile = file;
+
+      if (!file) return;
+
+      if (!file.name.toLowerCase().endsWith('.vcf')) {
+        vcfError.innerText = '⛔ Invalid type — must be .vcf';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        vcfError.innerText = '⛔ Exceeds 5MB limit';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const content = ev.target.result;
+        if (!content.includes('##fileformat=VCFv4.2')) {
+          vcfError.innerText = '⛔ VCF must be v4.2 (##fileformat=VCFv4.2)';
           return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-          errorDiv.innerText = 'File exceeds 5MB.';
-          return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-          const content = e.target.result;
-
-          if (!content.includes('##fileformat=VCFv4.2')) {
-            errorDiv.innerText = 'VCF must be v4.2.';
-            return;
-          }
-
-          const lines = content.split('\n');
-
-          lines.forEach((line) => {
-            if (!line.startsWith('#')) {
-              const cols = line.split('\t');
-              if (cols.length > 7) {
-                const info = cols[7];
-                const geneMatch = info.match(/GENE=([^;]+)/);
-                const rsMatch = info.match(/RS=([^;]+)/);
-                const starMatch = info.match(/STAR=([^;]+)/);
-
-                if (geneMatch && rsMatch && starMatch) {
-                  const gene = geneMatch[1];
-
-                  if (TARGET_GENES.includes(gene)) {
-                    parsedVariants.push({
-                      gene: gene,
-                      rsid: rsMatch[1],
-                      star: starMatch[1],
-                    });
-                  }
-                }
-              }
+        const lines = content.split('\n');
+        for (let line of lines) {
+          if (line.startsWith('#')) continue;
+          const cols = line.split('\t');
+          if (cols.length < 8) continue;
+          const info = cols[7];
+          const geneMatch = info.match(/GENE=([^;]+)/);
+          const rsMatch = info.match(/RS=([^;]+)/);
+          const starMatch = info.match(/STAR=([^;]+)/);
+          if (geneMatch && rsMatch && starMatch) {
+            const gene = geneMatch[1];
+            if (TARGET_GENES.includes(gene)) {
+              parsedVariants.push({
+                gene: gene,
+                rsid: rsMatch[1],
+                star: starMatch[1],
+              });
             }
-          });
-
-          if (parsedVariants.length === 0) {
-            errorDiv.innerText = 'No pharmacogenomic variants detected in target genes.';
-            return;
           }
+        }
 
-          vcfValidationPassed = true;
-          statusDiv.innerText = `VCF validated. ${parsedVariants.length} variants detected.`;
-        };
-
-        reader.readAsText(file);
-      });
-
-      // =================== ANALYSIS ===================
-
-      async function analyzeData() {
-        const drugInput = document.getElementById('drugInput').value;
-        const errorDiv = document.getElementById('drugError');
-        errorDiv.innerText = '';
-
-        if (!vcfValidationPassed) {
-          errorDiv.innerText = 'Upload valid VCF first.';
+        if (parsedVariants.length === 0) {
+          vcfError.innerHTML = '⚠️ No pharmacogenomic variants detected';
           return;
         }
 
-        if (!drugInput) {
-          errorDiv.innerText = 'Enter drug(s).';
-          return;
-        }
+        vcfValidationPassed = true;
+        fileStatus.innerHTML = `<span class="valid"><i class="fas fa-check-circle"></i> Valid VCF · ${parsedVariants.length} variant(s) found</span>`;
+      };
+      reader.readAsText(file);
+    });
 
-        const file = document.getElementById('vcfFile').files[0];
+    // API call to /analyze
+    async function analyzeData() {
+      const drugInput = document.getElementById('drugInput').value.trim();
+      drugError.innerText = '';
 
-        const formData = new FormData();
-        formData.append('vcf_file', file);
-        formData.append('drugs', drugInput);
-
-        try {
-          const response = await fetch('/api/analyze', {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error('API error');
-          }
-
-          const data = await response.json();
-
-          finalResults = data;
-          displayResults();
-        } catch (error) {
-          errorDiv.innerText = 'Failed to analyze data.';
-          console.error(error);
-        }
+      if (!vcfValidationPassed || !currentFile) {
+        drugError.innerText = '⛔ Please upload a valid VCF file first.';
+        return;
+      }
+      if (!drugInput) {
+        drugError.innerText = '⛔ Enter at least one drug.';
+        return;
       }
 
-      // =================== RISK ENGINE ===================
+      // Show loading
+      loadingIndicator.classList.add('show');
+      analyzeBtn.disabled = true;
+      downloadBtn.disabled = true;
+      copyBtn.disabled = true;
+      copySummaryBtn.disabled = true;
+      apiStatus.innerText = 'Sending request to API...';
 
-      function generateRisk(drug) {
-        const timestamp = new Date().toISOString();
-        const detectedGenes = [...new Set(parsedVariants.map((v) => v.gene))];
+      const formData = new FormData();
+      formData.append('vcf_file', currentFile);
+      formData.append('drugs', drugInput);
 
-        let risk = 'Unknown';
-        let severity = 'none';
-        let gene = 'Unknown';
-        let phenotype = 'Unknown';
-        let recommendation = 'No guidance.';
-        let mechanism = '';
-
-        if (drug === 'CODEINE' && detectedGenes.includes('CYP2D6')) {
-          gene = 'CYP2D6';
-          phenotype = 'URM';
-          risk = 'Toxic';
-          severity = 'high';
-          recommendation = 'Avoid codeine.';
-          mechanism = 'CYP2D6 URM increases morphine production.';
-        } else if (drug === 'WARFARIN' && detectedGenes.includes('CYP2C9')) {
-          gene = 'CYP2C9';
-          phenotype = 'IM';
-          risk = 'Adjust Dosage';
-          severity = 'moderate';
-          recommendation = 'Reduce starting dose.';
-          mechanism = 'Reduced warfarin metabolism.';
-        } else if (drug === 'CLOPIDOGREL' && detectedGenes.includes('CYP2C19')) {
-          gene = 'CYP2C19';
-          phenotype = 'PM';
-          risk = 'Ineffective';
-          severity = 'high';
-          recommendation = 'Use alternative therapy.';
-          mechanism = 'Impaired prodrug activation.';
-        } else if (drug === 'SIMVASTATIN' && detectedGenes.includes('SLCO1B1')) {
-          gene = 'SLCO1B1';
-          phenotype = 'Decreased Function';
-          risk = 'Adjust Dosage';
-          severity = 'moderate';
-          recommendation = 'Lower dose or alternative statin.';
-          mechanism = 'Increased statin exposure.';
-        } else if (drug === 'AZATHIOPRINE' && detectedGenes.includes('TPMT')) {
-          gene = 'TPMT';
-          phenotype = 'PM';
-          risk = 'Toxic';
-          severity = 'critical';
-          recommendation = 'Reduce dose significantly.';
-          mechanism = 'Thiopurine accumulation.';
-        } else if (drug === 'FLUOROURACIL' && detectedGenes.includes('DPYD')) {
-          gene = 'DPYD';
-          phenotype = 'Deficient';
-          risk = 'Toxic';
-          severity = 'critical';
-          recommendation = 'Avoid or reduce dose.';
-          mechanism = 'Impaired drug breakdown.';
-        } else {
-          risk = 'Safe';
-          recommendation = 'Standard dosing acceptable.';
-        }
-
-        return {
-          patient_id: 'PATIENT_001',
-          drug: drug,
-          timestamp: timestamp,
-          risk_assessment: {
-            risk_label: risk,
-            confidence_score: 0.92,
-            severity: severity,
-          },
-          pharmacogenomic_profile: {
-            primary_gene: gene,
-            diplotype: '*1/*2',
-            phenotype: phenotype,
-            detected_variants: parsedVariants.filter((v) => v.gene === gene),
-          },
-          clinical_recommendation: {
-            guideline_source: 'CPIC',
-            recommendation: recommendation,
-          },
-          llm_generated_explanation: {
-            summary: gene + ' influences ' + drug + ' response.',
-            mechanism: mechanism,
-            cited_variants: parsedVariants.filter((v) => v.gene === gene).map((v) => v.rsid),
-          },
-          quality_metrics: {
-            vcf_parsing_success: vcfValidationPassed,
-            variants_detected: parsedVariants.length,
-          },
-        };
-      }
-
-      // =================== DISPLAY ===================
-
-      function displayResults() {
-        const section = document.getElementById('resultsSection');
-        const container = document.getElementById('riskContainer');
-
-        section.classList.remove('hidden');
-        container.innerHTML = '';
-
-        finalResults.forEach((r) => {
-          const div = document.createElement('div');
-          div.className = 'risk-badge';
-
-          if (r.risk_assessment.risk_label === 'Safe') div.classList.add('safe');
-          else if (r.risk_assessment.risk_label === 'Adjust Dosage') div.classList.add('adjust');
-          else if (r.risk_assessment.risk_label === 'Ineffective') div.classList.add('ineffective');
-          else if (r.risk_assessment.risk_label === 'Toxic') div.classList.add('toxic');
-          else div.classList.add('unknown');
-
-          div.innerText = r.drug + ' → ' + r.risk_assessment.risk_label;
-
-          container.appendChild(div);
-        });
-
-        document.getElementById('jsonOutput').innerText = JSON.stringify(finalResults, null, 2);
-      }
-
-      async function downloadJSON() {
-        const file = document.getElementById('vcfFile').files[0];
-        const drugInput = document.getElementById('drugInput').value;
-
-        const formData = new FormData();
-        formData.append('vcf_file', file);
-        formData.append('drugs', drugInput);
-
+      try {
         const response = await fetch('/api/analyze', {
           method: 'POST',
-          body: formData,
+          body: formData
         });
 
-        const blob = await response.blob();
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'pharmacogenomic_results.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const data = await response.json();
+        
+        // Store the exact API response
+        finalResults = data;
+        
+        // Update UI
+        apiStatus.innerText = `✓ Response received · ${new Date().toLocaleTimeString()}`;
+        displayFormattedResults(data);
+        jsonOut.innerText = JSON.stringify(data, null, 2);
+        
+        // Show results section
+        resultsSection.classList.remove('hidden');
+        
+        // Enable buttons
+        downloadBtn.disabled = false;
+        copyBtn.disabled = false;
+        copySummaryBtn.disabled = false;
+
+      } catch (error) {
+        drugError.innerText = `❌ API call failed: ${error.message}`;
+        console.error('API Error:', error);
+      } finally {
+        loadingIndicator.classList.remove('show');
+        analyzeBtn.disabled = false;
+      }
+    }
+
+    // Format and display the API response in a readable way
+    function displayFormattedResults(data) {
+      // Clear containers
+      riskContainer.innerHTML = '';
+      formattedResults.innerHTML = '';
+
+      // If data is not an array, wrap it
+      const results = Array.isArray(data) ? data : [data];
+
+      // Create risk badges row
+      results.forEach(item => {
+        const badge = document.createElement('div');
+        badge.className = 'risk-badge';
+        const risk = item.risk_assessment?.risk_label || 'Unknown';
+
+        if (risk === 'Safe') badge.classList.add('safe');
+        else if (risk === 'Adjust Dosage') badge.classList.add('adjust');
+        else if (risk === 'Ineffective') badge.classList.add('ineffective');
+        else if (risk === 'Toxic') badge.classList.add('toxic');
+        else badge.classList.add('unknown');
+
+        let icon = '<i class="fas fa-shield"></i>';
+        if (risk === 'Toxic') icon = '<i class="fas fa-skull-crosswalk"></i>';
+        else if (risk === 'Adjust Dosage') icon = '<i class="fas fa-scale-balanced"></i>';
+        else if (risk === 'Ineffective') icon = '<i class="fas fa-ban"></i>';
+        else if (risk === 'Safe') icon = '<i class="fas fa-check-circle"></i>';
+
+        badge.innerHTML = `${icon} ${item.drug} → ${risk}`;
+        riskContainer.appendChild(badge);
+      });
+
+      // Create detailed cards for each drug
+      results.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'drug-result-card';
+        
+        // Set border color based on risk
+        const risk = item.risk_assessment?.risk_label || 'Unknown';
+        let borderColor = '#5b677b';
+        if (risk === 'Safe') borderColor = '#1e7b4b';
+        else if (risk === 'Adjust Dosage') borderColor = '#c16f1d';
+        else if (risk === 'Ineffective') borderColor = '#7a3e7a';
+        else if (risk === 'Toxic') borderColor = '#b13e3e';
+        card.style.borderLeftColor = borderColor;
+
+        // Severity class
+        const severity = item.risk_assessment?.severity || 'unknown';
+        let severityClass = 'severity-moderate';
+        if (severity === 'critical') severityClass = 'severity-critical';
+        else if (severity === 'high') severityClass = 'severity-high';
+        else if (severity === 'low') severityClass = 'severity-low';
+
+        const profile = item.pharmacogenomic_profile || {};
+        const variants = profile.detected_variants || [];
+        
+        card.innerHTML = `
+          <div class="drug-header">
+            <span class="drug-name">${item.drug}</span>
+            <span class="severity-badge ${severityClass}">${severity} severity</span>
+          </div>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Patient ID</div>
+              <div class="info-value">${item.patient_id || 'N/A'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Primary Gene</div>
+              <div class="info-value">${profile.primary_gene || 'N/A'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Diplotype</div>
+              <div class="info-value">${profile.diplotype || 'N/A'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Phenotype</div>
+              <div class="info-value">${profile.phenotype || 'N/A'}</div>
+            </div>
+          </div>
+
+          <div class="info-item" style="margin-bottom: 1rem;">
+            <div class="info-label">Clinical Recommendation</div>
+            <div class="info-value">${item.clinical_recommendation?.recommendation || 'N/A'}</div>
+            <div style="font-size:0.85rem; color:#5f6f8a; margin-top:0.3rem;">Source: ${item.clinical_recommendation?.guideline_source || 'CPIC'}</div>
+          </div>
+
+          <div class="explanation-box">
+            <div style="font-weight:600; margin-bottom:0.8rem; color:#1f3c88;">
+              <i class="fas fa-robot"></i> AI Explanation
+            </div>
+            <div style="margin-bottom:0.8rem;">${item.llm_generated_explanation?.summary || ''}</div>
+            <div style="font-size:0.95rem; color:#2c405e;">${item.llm_generated_explanation?.mechanism || ''}</div>
+            
+            <div class="variants-list" style="margin-top:1rem;">
+              ${variants.map(v => `<span class="variant-tag"><i class="fas fa-dna"></i> ${v.rsid || ''} (${v.gene || ''} ${v.star || ''})</span>`).join('')}
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:#5f6f8a; margin-top:1rem;">
+            <span><i class="fa-regular fa-clock"></i> ${new Date(item.timestamp).toLocaleString()}</span>
+            <span><i class="fas fa-chart-line"></i> confidence: ${(item.risk_assessment?.confidence_score * 100).toFixed(0)}%</span>
+          </div>
+        `;
+
+        formattedResults.appendChild(card);
+      });
+    }
+
+    // Download raw JSON
+    function downloadJSON() {
+      if (!finalResults || finalResults.length === 0) {
+        alert('No results to download');
+        return;
+      }
+      const blob = new Blob([JSON.stringify(finalResults, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pharmaguard_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Copy raw JSON
+    function copyJSON() {
+      if (!finalResults || finalResults.length === 0) {
+        alert('No results to copy');
+        return;
+      }
+      navigator.clipboard.writeText(JSON.stringify(finalResults, null, 2));
+      alert('📋 Raw JSON copied to clipboard!');
+    }
+
+    // Copy formatted summary
+    function copyFormattedSummary() {
+      if (!finalResults || finalResults.length === 0) {
+        alert('No results to copy');
+        return;
       }
 
-      function copyJSON() {
-        navigator.clipboard.writeText(JSON.stringify(finalResults, null, 2));
-        alert('Copied to clipboard!');
-      }
-    </script>
-  </body>
+      let summary = 'PHARMAGUARD RESULTS\n';
+      summary += '='.repeat(50) + '\n\n';
+
+      const results = Array.isArray(finalResults) ? finalResults : [finalResults];
+      
+      results.forEach((item, idx) => {
+        summary += `DRUG: ${item.drug}\n`;
+        summary += `Risk: ${item.risk_assessment?.risk_label} (${item.risk_assessment?.severity} severity, ${(item.risk_assessment?.confidence_score*100).toFixed(0)}% confidence)\n`;
+        summary += `Gene: ${item.pharmacogenomic_profile?.primary_gene} | ${item.pharmacogenomic_profile?.phenotype}\n`;
+        summary += `Recommendation: ${item.clinical_recommendation?.recommendation}\n`;
+        summary += `Explanation: ${item.llm_generated_explanation?.summary}\n`;
+        if (idx < results.length - 1) summary += '\n' + '-'.repeat(40) + '\n\n';
+      });
+
+      navigator.clipboard.writeText(summary);
+      alert('📋 Formatted summary copied to clipboard!');
+    }
+
+    // Attach functions to window
+    window.analyzeData = analyzeData;
+    window.downloadJSON = downloadJSON;
+    window.copyJSON = copyJSON;
+    window.copyFormattedSummary = copyFormattedSummary;
+  })();
+</script>
+</body>
 </html>
