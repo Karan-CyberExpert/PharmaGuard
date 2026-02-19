@@ -13,9 +13,7 @@ app.use(express.json());
 
 app.use("/api", analyzeRouter);
 
-app.get("/", (_req: any, res: any) => {
-  res.json({ message: "PharmaGuard API running 🚀" });
-});
+app.get("/", express.static("public"));
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

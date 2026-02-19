@@ -1,0 +1,417 @@
+<!doctype html>
+<html>
+  <head>
+    <title>PharmaGuard</title>
+    <style>
+      body {
+        font-family: Arial;
+        margin: 0;
+        background: #f4f6f9;
+      }
+
+      header {
+        background: #1f3c88;
+        color: white;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .container {
+        width: 90%;
+        max-width: 900px;
+        margin: 30px auto;
+      }
+
+      .card {
+        background: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      input {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+      }
+
+      button {
+        padding: 10px;
+        background: #1f3c88;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #162d63;
+      }
+
+      .error {
+        color: red;
+        font-weight: bold;
+      }
+
+      .safe {
+        background: green;
+      }
+      .adjust {
+        background: orange;
+      }
+      .toxic {
+        background: red;
+      }
+      .ineffective {
+        background: darkred;
+      }
+      .unknown {
+        background: gray;
+      }
+
+      .risk-badge {
+        padding: 10px;
+        margin: 5px 0;
+        color: white;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+
+      pre {
+        background: black;
+        color: #00ff88;
+        padding: 15px;
+        overflow-x: auto;
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🧬 PharmaGuard</h1>
+      <p>AI Pharmacogenomic Risk Assessment</p>
+    </header>
+
+    <div class="container">
+      <!-- VCF Upload -->
+      <div class="card">
+        <h2>Upload VCF File</h2>
+        <p>
+          Requirements: • .vcf format (VCFv4.2)
+          <br />
+          • Max size 5MB
+        </p>
+
+        <input type="file" id="vcfFile" accept=".vcf" />
+        <div id="fileStatus"></div>
+        <div id="vcfError" class="error"></div>
+      </div>
+
+      <!-- Drug Input -->
+      <div class="card">
+        <h2>Enter Drug(s)</h2>
+        <p>Supported: CODEINE, WARFARIN, CLOPIDOGREL, SIMVASTATIN, AZATHIOPRINE, FLUOROURACIL</p>
+
+        <input type="text" id="drugInput" placeholder="Example: CODEINE, WARFARIN" />
+
+        <button onclick="analyzeData()">Analyze</button>
+        <div id="drugError" class="error"></div>
+      </div>
+
+      <!-- Results -->
+      <div class="card hidden" id="resultsSection">
+        <h2>Risk Assessment</h2>
+        <div id="riskContainer"></div>
+
+        <h3>Structured JSON Output</h3>
+        <pre id="jsonOutput"></pre>
+
+        <button onclick="downloadJSON()">Download JSON</button>
+        <button onclick="copyJSON()">Copy JSON</button>
+      </div>
+    </div>
+
+    <script>
+      let parsedVariants = [];
+      let finalResults = [];
+      let vcfValidationPassed = false;
+
+      const SUPPORTED_DRUGS = [
+        'CODEINE',
+        'WARFARIN',
+        'CLOPIDOGREL',
+        'SIMVASTATIN',
+        'AZATHIOPRINE',
+        'FLUOROURACIL',
+      ];
+
+      const TARGET_GENES = ['CYP2D6', 'CYP2C19', 'CYP2C9', 'SLCO1B1', 'TPMT', 'DPYD'];
+
+      // =================== VCF VALIDATION ===================
+
+      document.getElementById('vcfFile').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        const errorDiv = document.getElementById('vcfError');
+        const statusDiv = document.getElementById('fileStatus');
+
+        errorDiv.innerText = '';
+        statusDiv.innerText = '';
+        parsedVariants = [];
+        vcfValidationPassed = false;
+
+        if (!file) return;
+
+        if (!file.name.endsWith('.vcf')) {
+          errorDiv.innerText = 'Invalid file type.';
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          errorDiv.innerText = 'File exceeds 5MB.';
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          const content = e.target.result;
+
+          if (!content.includes('##fileformat=VCFv4.2')) {
+            errorDiv.innerText = 'VCF must be v4.2.';
+            return;
+          }
+
+          const lines = content.split('\n');
+
+          lines.forEach((line) => {
+            if (!line.startsWith('#')) {
+              const cols = line.split('\t');
+              if (cols.length > 7) {
+                const info = cols[7];
+                const geneMatch = info.match(/GENE=([^;]+)/);
+                const rsMatch = info.match(/RS=([^;]+)/);
+                const starMatch = info.match(/STAR=([^;]+)/);
+
+                if (geneMatch && rsMatch && starMatch) {
+                  const gene = geneMatch[1];
+
+                  if (TARGET_GENES.includes(gene)) {
+                    parsedVariants.push({
+                      gene: gene,
+                      rsid: rsMatch[1],
+                      star: starMatch[1],
+                    });
+                  }
+                }
+              }
+            }
+          });
+
+          if (parsedVariants.length === 0) {
+            errorDiv.innerText = 'No pharmacogenomic variants detected in target genes.';
+            return;
+          }
+
+          vcfValidationPassed = true;
+          statusDiv.innerText = `VCF validated. ${parsedVariants.length} variants detected.`;
+        };
+
+        reader.readAsText(file);
+      });
+
+      // =================== ANALYSIS ===================
+
+      async function analyzeData() {
+        const drugInput = document.getElementById('drugInput').value;
+        const errorDiv = document.getElementById('drugError');
+        errorDiv.innerText = '';
+
+        if (!vcfValidationPassed) {
+          errorDiv.innerText = 'Upload valid VCF first.';
+          return;
+        }
+
+        if (!drugInput) {
+          errorDiv.innerText = 'Enter drug(s).';
+          return;
+        }
+
+        const file = document.getElementById('vcfFile').files[0];
+
+        const formData = new FormData();
+        formData.append('vcf_file', file);
+        formData.append('drugs', drugInput);
+
+        try {
+          const response = await fetch('/api/analyze', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error('API error');
+          }
+
+          const data = await response.json();
+
+          finalResults = data;
+          displayResults();
+        } catch (error) {
+          errorDiv.innerText = 'Failed to analyze data.';
+          console.error(error);
+        }
+      }
+
+      // =================== RISK ENGINE ===================
+
+      function generateRisk(drug) {
+        const timestamp = new Date().toISOString();
+        const detectedGenes = [...new Set(parsedVariants.map((v) => v.gene))];
+
+        let risk = 'Unknown';
+        let severity = 'none';
+        let gene = 'Unknown';
+        let phenotype = 'Unknown';
+        let recommendation = 'No guidance.';
+        let mechanism = '';
+
+        if (drug === 'CODEINE' && detectedGenes.includes('CYP2D6')) {
+          gene = 'CYP2D6';
+          phenotype = 'URM';
+          risk = 'Toxic';
+          severity = 'high';
+          recommendation = 'Avoid codeine.';
+          mechanism = 'CYP2D6 URM increases morphine production.';
+        } else if (drug === 'WARFARIN' && detectedGenes.includes('CYP2C9')) {
+          gene = 'CYP2C9';
+          phenotype = 'IM';
+          risk = 'Adjust Dosage';
+          severity = 'moderate';
+          recommendation = 'Reduce starting dose.';
+          mechanism = 'Reduced warfarin metabolism.';
+        } else if (drug === 'CLOPIDOGREL' && detectedGenes.includes('CYP2C19')) {
+          gene = 'CYP2C19';
+          phenotype = 'PM';
+          risk = 'Ineffective';
+          severity = 'high';
+          recommendation = 'Use alternative therapy.';
+          mechanism = 'Impaired prodrug activation.';
+        } else if (drug === 'SIMVASTATIN' && detectedGenes.includes('SLCO1B1')) {
+          gene = 'SLCO1B1';
+          phenotype = 'Decreased Function';
+          risk = 'Adjust Dosage';
+          severity = 'moderate';
+          recommendation = 'Lower dose or alternative statin.';
+          mechanism = 'Increased statin exposure.';
+        } else if (drug === 'AZATHIOPRINE' && detectedGenes.includes('TPMT')) {
+          gene = 'TPMT';
+          phenotype = 'PM';
+          risk = 'Toxic';
+          severity = 'critical';
+          recommendation = 'Reduce dose significantly.';
+          mechanism = 'Thiopurine accumulation.';
+        } else if (drug === 'FLUOROURACIL' && detectedGenes.includes('DPYD')) {
+          gene = 'DPYD';
+          phenotype = 'Deficient';
+          risk = 'Toxic';
+          severity = 'critical';
+          recommendation = 'Avoid or reduce dose.';
+          mechanism = 'Impaired drug breakdown.';
+        } else {
+          risk = 'Safe';
+          recommendation = 'Standard dosing acceptable.';
+        }
+
+        return {
+          patient_id: 'PATIENT_001',
+          drug: drug,
+          timestamp: timestamp,
+          risk_assessment: {
+            risk_label: risk,
+            confidence_score: 0.92,
+            severity: severity,
+          },
+          pharmacogenomic_profile: {
+            primary_gene: gene,
+            diplotype: '*1/*2',
+            phenotype: phenotype,
+            detected_variants: parsedVariants.filter((v) => v.gene === gene),
+          },
+          clinical_recommendation: {
+            guideline_source: 'CPIC',
+            recommendation: recommendation,
+          },
+          llm_generated_explanation: {
+            summary: gene + ' influences ' + drug + ' response.',
+            mechanism: mechanism,
+            cited_variants: parsedVariants.filter((v) => v.gene === gene).map((v) => v.rsid),
+          },
+          quality_metrics: {
+            vcf_parsing_success: vcfValidationPassed,
+            variants_detected: parsedVariants.length,
+          },
+        };
+      }
+
+      // =================== DISPLAY ===================
+
+      function displayResults() {
+        const section = document.getElementById('resultsSection');
+        const container = document.getElementById('riskContainer');
+
+        section.classList.remove('hidden');
+        container.innerHTML = '';
+
+        finalResults.forEach((r) => {
+          const div = document.createElement('div');
+          div.className = 'risk-badge';
+
+          if (r.risk_assessment.risk_label === 'Safe') div.classList.add('safe');
+          else if (r.risk_assessment.risk_label === 'Adjust Dosage') div.classList.add('adjust');
+          else if (r.risk_assessment.risk_label === 'Ineffective') div.classList.add('ineffective');
+          else if (r.risk_assessment.risk_label === 'Toxic') div.classList.add('toxic');
+          else div.classList.add('unknown');
+
+          div.innerText = r.drug + ' → ' + r.risk_assessment.risk_label;
+
+          container.appendChild(div);
+        });
+
+        document.getElementById('jsonOutput').innerText = JSON.stringify(finalResults, null, 2);
+      }
+
+      async function downloadJSON() {
+        const file = document.getElementById('vcfFile').files[0];
+        const drugInput = document.getElementById('drugInput').value;
+
+        const formData = new FormData();
+        formData.append('vcf_file', file);
+        formData.append('drugs', drugInput);
+
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const blob = await response.blob();
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'pharmacogenomic_results.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      function copyJSON() {
+        navigator.clipboard.writeText(JSON.stringify(finalResults, null, 2));
+        alert('Copied to clipboard!');
+      }
+    </script>
+  </body>
+</html>
